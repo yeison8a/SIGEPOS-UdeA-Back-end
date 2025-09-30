@@ -3,6 +3,7 @@ package edu.udea.sigepos.service;
 import edu.udea.sigepos.dto.AuthRequest;
 import edu.udea.sigepos.dto.AuthResponse;
 import edu.udea.sigepos.dto.RegisterRequest;
+import edu.udea.sigepos.model.Role;
 import edu.udea.sigepos.model.User;
 import edu.udea.sigepos.repository.UserRepository;
 import jakarta.security.auth.message.AuthException;
@@ -42,10 +43,13 @@ public class AuthService {
         if(userRepository.findByCorreo(request.getCorreo()).isPresent()){
             throw new RuntimeException("Correo ya existe");
         }
+
+        Role rol = request.getRole() != null ? request.getRole() : Role.USER;
+
         User user = User.builder()
                 .correo(request.getCorreo())
                 .contrasena(bCryptPasswordEncoder.encode(request.getContrasena()))
-                .rol(request.getRole())
+                .rol(rol)
                 .build();
 
         userRepository.save(user);
