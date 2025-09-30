@@ -35,6 +35,12 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/api/register").permitAll()
                                 .requestMatchers("/api/login").permitAll()
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(sessionManagement ->
