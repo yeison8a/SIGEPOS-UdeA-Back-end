@@ -20,7 +20,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final AuthenticationManager authenticationManager;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -54,7 +53,10 @@ public class UserService {
     public User updateUser(UUID id, User updatedUser) {
         User existingUser = getUserById(id);
         existingUser.setCorreo(updatedUser.getCorreo());
-        existingUser.setContrasena(updatedUser.getContrasena()); //encriptar
+        if(updatedUser.getContrasena() != null && !updatedUser.getContrasena().isEmpty()){
+            String encodedPassword = bCryptPasswordEncoder.encode(updatedUser.getContrasena());
+            existingUser.setContrasena(encodedPassword);
+        }
         existingUser.setRol(updatedUser.getRol());
         return userRepository.save(existingUser);
     }
