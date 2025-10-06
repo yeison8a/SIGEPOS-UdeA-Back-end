@@ -29,7 +29,7 @@ public class DocumentService {
 
     public Document subirDocumento(UUID userId, MultipartFile archivo) throws IOException {
         User usuario = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
 
         String url = s3Service.subirArchivo(archivo);
 
@@ -45,5 +45,11 @@ public class DocumentService {
 
     public List<Document> listarDocumentosPorUsuario(UUID userId) {
         return documentRepository.findByUsuarioId(userId);
+    }
+
+    public static class UserNotFoundException extends RuntimeException {
+        public UserNotFoundException(String message) {
+            super(message);
+        }
     }
 }

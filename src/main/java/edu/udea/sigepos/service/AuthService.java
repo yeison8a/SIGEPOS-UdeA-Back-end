@@ -6,9 +6,7 @@ import edu.udea.sigepos.dto.RegisterRequest;
 import edu.udea.sigepos.model.Role;
 import edu.udea.sigepos.model.User;
 import edu.udea.sigepos.repository.UserRepository;
-import jakarta.security.auth.message.AuthException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,7 +25,7 @@ public class AuthService {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getCorreo(), request.getContrasena()));
         } catch (Exception e) {
-            throw new AuthException("Correo o contraseña incorrectos");
+            throw new AuthException("Correo o contraseña incorrectos.");
         }
 
         User user = userRepository.findByCorreo(request.getCorreo())
@@ -41,7 +39,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if(userRepository.findByCorreo(request.getCorreo()).isPresent()){
-            throw new RuntimeException("Correo ya existe");
+            throw new UserAlreadyExistsException("Correo ya existe.");
         }
 
         Role rol = request.getRole() != null ? request.getRole() : Role.USER;
