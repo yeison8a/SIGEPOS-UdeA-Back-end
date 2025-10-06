@@ -37,25 +37,7 @@ public class AuthService {
                 .build();
     }
 
-    public AuthResponse register(RegisterRequest request) {
-        if(userRepository.findByCorreo(request.getCorreo()).isPresent()){
-            throw new UserAlreadyExistsException("Correo ya existe.");
-        }
 
-        Role rol = request.getRole() != null ? request.getRole() : Role.USER;
-
-        User user = User.builder()
-                .correo(request.getCorreo())
-                .contrasena(bCryptPasswordEncoder.encode(request.getContrasena()))
-                .rol(rol)
-                .build();
-
-        userRepository.save(user);
-
-        return AuthResponse.builder()
-                .token(jwtService.getToken(user))
-                .build();
-    }
 
     public static class AuthException extends RuntimeException {
         public AuthException(String message) {
@@ -63,9 +45,4 @@ public class AuthService {
         }
     }
 
-    public static class UserAlreadyExistsException extends RuntimeException {
-        public UserAlreadyExistsException(String message) {
-            super(message);
-        }
-    }
 }
