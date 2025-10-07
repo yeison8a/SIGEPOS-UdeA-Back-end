@@ -8,6 +8,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -30,10 +31,11 @@ public class S3Service {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
                 .build();
+
     }
 
-    public String subirArchivo(MultipartFile archivo) throws IOException {
-        String key = UUID.randomUUID() + "_" + archivo.getOriginalFilename();
+    public String subirArchivoConCarpeta(UUID userId, MultipartFile archivo) throws IOException {
+        String key = userId + "/" + UUID.randomUUID() + "_" + archivo.getOriginalFilename();
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -41,9 +43,20 @@ public class S3Service {
                 .contentType(archivo.getContentType())
                 .build();
 
-        s3Client.putObject(putObjectRequest, software.amazon.awssdk.core.sync.RequestBody.fromBytes(archivo.getBytes()));
+        s3Client.putObject(putObjectRequest,
+                software.amazon.awssdk.core.sync.RequestBody.fromBytes(archivo.getBytes()));
 
         return "https://" + bucketName + ".s3.amazonaws.com/" + key;
+    }
+
+    public void eliminarArchivoPorUrl(String url) {
+        String key = url.substring(url.indexOf(".com/") + 5);
+
+        try {
+            s3Client.deleteObject(builder -> builder.bucket(bucketName).key(key).build());
+        } catch (S3Exception e) {
+            throw new RuntimeException("Error al eliminar el archivo de S3: " + e.awsErrorDetails().errorMessage());
+        }
     }
 
 }

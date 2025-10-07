@@ -31,7 +31,7 @@ public class DocumentService {
         User usuario = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
 
-        String url = s3Service.subirArchivo(archivo);
+        String url = s3Service.subirArchivoConCarpeta(userId, archivo);
 
         Document doc = Document.builder()
                 .nombre(archivo.getOriginalFilename())
@@ -47,8 +47,44 @@ public class DocumentService {
         return documentRepository.findByUsuarioId(userId);
     }
 
+    public Document obtenerDocumento(UUID userId, UUID docId) {
+        return documentRepository.findById(docId)
+                .filter(doc -> doc.getUsuario().getId().equals(userId))
+                .orElseThrow(() -> new DocumentNotFoundException("Documento no encontrado"));
+    }
+
+    public Document actualizarDocumento(UUID userId, UUID docId, MultipartFile archivo, String nuevoNombre) throws IOException {
+        Document existing = obtenerDocumento(userId, docId);
+
+        if (archivo != null && !archivo.isEmpty()) {
+            s3Service.eliminarArchivoPorUrl(existing.getUrl());
+            String nuevaUrl = s3Service.subirArchivoConCarpeta(userId, archivo);
+            existing.setUrl(nuevaUrl);
+            existing.setNombre(archivo.getOriginalFilename());
+            existing.setFechaSubida(LocalDateTime.now());
+        }
+
+        if (nuevoNombre != null && !nuevoNombre.isBlank()) {
+            existing.setNombre(nuevoNombre);
+        }
+
+        return documentRepository.save(existing);
+    }
+
+    public void eliminarDocumento(UUID userId, UUID docId) {
+        Document existing = obtenerDocumento(userId, docId);
+        s3Service.eliminarArchivoPorUrl(existing.getUrl());
+        documentRepository.delete(existing);
+    }
+
     public static class UserNotFoundException extends RuntimeException {
         public UserNotFoundException(String message) {
+            super(message);
+        }
+    }
+
+    public static class DocumentNotFoundException extends RuntimeException {
+        public DocumentNotFoundException(String message) {
             super(message);
         }
     }

@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/register").permitAll()
+                                .requestMatchers("/api/**").permitAll()
                                 .requestMatchers("/api/login").permitAll()
                                 .requestMatchers("/user/{UserId}/documents/**").permitAll()
                                 .requestMatchers(

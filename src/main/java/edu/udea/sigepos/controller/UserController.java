@@ -38,6 +38,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, user));
     }
 
+    // los que tienen clave foranea no se pueden borrar
     @DeleteMapping("/user/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
