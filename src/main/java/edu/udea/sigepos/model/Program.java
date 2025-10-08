@@ -32,6 +32,9 @@ public class Program {
 
     private Long registroCalificado;
 
+    @Temporal(TemporalType.DATE)
+    private Date fechaRegistroCalificado;
+
     private String acuardosCreacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

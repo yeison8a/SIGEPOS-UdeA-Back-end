@@ -34,6 +34,7 @@ public class ProgramService {
         existing.setUnidadAcademica(updatedProgram.getUnidadAcademica());
         existing.setSnies(updatedProgram.getSnies());
         existing.setRegistroCalificado(updatedProgram.getRegistroCalificado());
+        existing.setFechaRegistroCalificado(updatedProgram.getFechaRegistroCalificado());
         existing.setAcuardosCreacion(updatedProgram.getAcuardosCreacion());
         existing.setTipoAcuerdo(updatedProgram.getTipoAcuerdo());
         existing.setAcreditacionAltaCalidad(updatedProgram.getAcreditacionAltaCalidad());
