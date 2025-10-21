@@ -19,6 +19,7 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
+    /*
     @PostMapping
     public ResponseEntity<Document> subirDocumento(
             @PathVariable UUID userId,
@@ -26,6 +27,16 @@ public class DocumentController {
     ) throws IOException {
         Document doc = documentService.subirDocumento(userId, archivo);
         return ResponseEntity.ok(doc);
+    }
+    */
+
+    @PostMapping
+    public ResponseEntity<List<Document>> subirDocumentos(
+            @PathVariable UUID userId,
+            @RequestParam("archivos") MultipartFile[] archivos
+    ) throws IOException {
+        List<Document> documentosGuardados = documentService.subirDocumentos(userId, archivos);
+        return ResponseEntity.ok(documentosGuardados);
     }
 
     @GetMapping

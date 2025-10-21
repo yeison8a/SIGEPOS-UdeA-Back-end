@@ -42,13 +42,10 @@ public class CohortApplicationController {
         User usuario = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Asociamos el usuario
         cohortApplication.setUsuario(usuario);
 
-        // Guardamos la cohorte
         CohortApplication savedCohort = cohortApplicationService.save(cohortApplication);
 
-        // Enviar Word automáticamente
         wordService.generarYEnviarDocumento(savedCohort.getId(), usuario.getId());
 
         return savedCohort;

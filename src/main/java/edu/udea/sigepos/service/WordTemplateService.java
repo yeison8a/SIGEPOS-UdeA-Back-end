@@ -39,18 +39,14 @@ public class WordTemplateService {
 
     @Transactional
     public void generarYEnviarDocumento(UUID cohortId, UUID userId) throws IOException {
-        // 1️⃣ Obtener cohorte
         CohortApplication app = cohortRepo.findByIdWithProgramAndUnit(cohortId)
                 .orElseThrow(() -> new IllegalArgumentException("Cohorte no encontrada"));
 
-        // 2️⃣ Generar documento
         File documento = generarDocumentoInterno(app);
 
-        // 3️⃣ Obtener destinatario
         User destinatario = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-        // 4️⃣ Enviar correo
         emailService.enviarCorreoConAdjunto(
                 destinatario.getCorreo(),
                 "Solicitud de Cohorte",
@@ -63,7 +59,6 @@ public class WordTemplateService {
         Program programa = app.getPrograma();
         AcademicUnit unidad = (programa != null) ? programa.getUnidadAcademica() : null;
 
-        // 🔹 Construir mapa de reemplazos
         Map<String, String> data = new HashMap<>();
         data.put("Programa", (programa != null) ? programa.getNombre() : "N/A");
         data.put("Unidad Académica", (unidad != null) ? unidad.getNombre() : "N/A");
@@ -137,15 +132,12 @@ public class WordTemplateService {
         data.put("Indique el número de plazas de estudiante instructor que el programa va a ofrecer en esta cohorte", String.valueOf(app.getCupoEstudiantes()));
 
 
-        // 🔹 Leer plantilla
         File templateFile = new ClassPathResource("templates/plantilla.docx").getFile();
         try (FileInputStream fis = new FileInputStream(templateFile);
              XWPFDocument doc = new XWPFDocument(fis)) {
 
-            // Reemplazo en párrafos
             replaceTextPreserveStyle(doc.getParagraphs(), data);
 
-            // Reemplazo en tablas
             for (XWPFTable table : doc.getTables()) {
                 for (XWPFTableRow row : table.getRows()) {
                     for (XWPFTableCell cell : row.getTableCells()) {
@@ -154,7 +146,6 @@ public class WordTemplateService {
                 }
             }
 
-            // Guardar documento temporal
             File outputFile = File.createTempFile("cohorte_", ".docx");
             try (FileOutputStream fos = new FileOutputStream(outputFile)) {
                 doc.write(fos);

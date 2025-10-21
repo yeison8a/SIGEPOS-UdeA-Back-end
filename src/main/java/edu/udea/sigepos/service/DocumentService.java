@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +42,17 @@ public class DocumentService {
                 .build();
 
         return documentRepository.save(doc);
+    }
+
+    public List<Document> subirDocumentos(UUID userId, MultipartFile[] archivos) throws IOException {
+        List<Document> documentos = new ArrayList<>();
+        for (MultipartFile archivo : archivos) {
+            if (archivo != null && !archivo.isEmpty()) {
+                Document doc = subirDocumento(userId, archivo);
+                documentos.add(doc);
+            }
+        }
+        return documentos;
     }
 
     public List<Document> listarDocumentosPorUsuario(UUID userId) {
