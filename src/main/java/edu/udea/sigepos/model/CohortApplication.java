@@ -37,4 +37,8 @@ public class CohortApplication {
     private int cupoEstudiantes;
     private boolean plazasDisponibles;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private User usuario;
+
 }

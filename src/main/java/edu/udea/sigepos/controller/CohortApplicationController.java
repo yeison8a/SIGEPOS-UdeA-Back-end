@@ -1,12 +1,16 @@
 package edu.udea.sigepos.controller;
 
 import edu.udea.sigepos.model.CohortApplication;
+import edu.udea.sigepos.model.User;
 import edu.udea.sigepos.repository.CohortApplicationRepository;
+import edu.udea.sigepos.repository.UserRepository;
 import edu.udea.sigepos.service.CohortApplicationService;
+import edu.udea.sigepos.service.WordTemplateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +20,8 @@ import java.util.UUID;
 public class CohortApplicationController {
 
     private final CohortApplicationService cohortApplicationService;
+    private final UserRepository userRepository;
+    private final WordTemplateService wordService;
 
     @GetMapping
     public List<CohortApplication> getAll(){
@@ -30,9 +36,25 @@ public class CohortApplicationController {
     }
 
     @PostMapping
-    public CohortApplication create(@RequestBody CohortApplication cohortApplication){
-        return cohortApplicationService.save(cohortApplication);
+    public CohortApplication create(@RequestBody CohortApplication cohortApplication,
+                                    @RequestParam UUID userId) throws IOException {
+
+        User usuario = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Asociamos el usuario
+        cohortApplication.setUsuario(usuario);
+
+        // Guardamos la cohorte
+        CohortApplication savedCohort = cohortApplicationService.save(cohortApplication);
+
+        // Enviar Word automáticamente
+        wordService.generarYEnviarDocumento(savedCohort.getId(), usuario.getId());
+
+        return savedCohort;
     }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<CohortApplication> update(@PathVariable UUID id, @RequestBody CohortApplication updated){

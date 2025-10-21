@@ -33,4 +33,11 @@ public class WordController {
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
                 .body(contents);
     }
+
+    @PostMapping("/cohorte/{cohortId}/enviar/{userId}")
+    public ResponseEntity<String> enviarWord(@PathVariable UUID cohortId, @PathVariable UUID userId) throws IOException {
+        wordService.generarYEnviarDocumento(cohortId, userId);
+        return ResponseEntity.ok("Documento enviado correctamente al correo del usuario.");
+    }
+
 }

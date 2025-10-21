@@ -3,7 +3,9 @@ package edu.udea.sigepos.service;
 import edu.udea.sigepos.model.CohortApplication;
 import edu.udea.sigepos.model.Program;
 import edu.udea.sigepos.model.AcademicUnit;
+import edu.udea.sigepos.model.User;
 import edu.udea.sigepos.repository.CohortApplicationRepository;
+import edu.udea.sigepos.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
@@ -17,29 +19,61 @@ import java.util.*;
 public class WordTemplateService {
 
     private final CohortApplicationRepository cohortRepo;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public WordTemplateService(CohortApplicationRepository cohortRepo) {
+    public WordTemplateService(CohortApplicationRepository cohortRepo,
+                               UserRepository userRepository,
+                               EmailService emailService) {
         this.cohortRepo = cohortRepo;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
-    public File generarDocumento(UUID id) throws IOException {
-        CohortApplication app = cohortRepo.findByIdWithProgramAndUnit(id)
+    public File generarDocumento(UUID cohortId) throws IOException {
+        CohortApplication app = cohortRepo.findByIdWithProgramAndUnit(cohortId)
+                .orElseThrow(() -> new IllegalArgumentException("Cohorte no encontrada"));
+        return generarDocumentoInterno(app);
+    }
+
+    @Transactional
+    public void generarYEnviarDocumento(UUID cohortId, UUID userId) throws IOException {
+        // 1️⃣ Obtener cohorte
+        CohortApplication app = cohortRepo.findByIdWithProgramAndUnit(cohortId)
                 .orElseThrow(() -> new IllegalArgumentException("Cohorte no encontrada"));
 
+        // 2️⃣ Generar documento
+        File documento = generarDocumentoInterno(app);
+
+        // 3️⃣ Obtener destinatario
+        User destinatario = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        // 4️⃣ Enviar correo
+        emailService.enviarCorreoConAdjunto(
+                destinatario.getCorreo(),
+                "Solicitud de Cohorte",
+                "Adjunto encontrarás el documento generado para tu solicitud de cohorte.",
+                documento
+        );
+    }
+
+    private File generarDocumentoInterno(CohortApplication app) throws IOException {
         Program programa = app.getPrograma();
         AcademicUnit unidad = (programa != null) ? programa.getUnidadAcademica() : null;
 
+        // 🔹 Construir mapa de reemplazos
         Map<String, String> data = new HashMap<>();
         data.put("Programa", (programa != null) ? programa.getNombre() : "N/A");
         data.put("Unidad Académica", (unidad != null) ? unidad.getNombre() : "N/A");
-        data.put("NumeroActa", Optional.ofNullable(app.getNumeroActa()).orElse(""));
+        data.put("NumeroActa", Optional.ofNullable(app.getNumeroActa()).orElse("N/A"));
         data.put("FechaActaAprobacion",
                 (app.getFechaActaAprobacion() != null)
                         ? new SimpleDateFormat("dd/MM/yyyy").format(app.getFechaActaAprobacion())
-                        : "");
-        data.put("PerfilAspirante", Optional.ofNullable(app.getPerfilAspirante()).orElse(""));
-        data.put("CorreoDocumentacion", Optional.ofNullable(app.getCorreoDocumentacion()).orElse(""));
+                        : "N/A");
+        data.put("PerfilAspirante", Optional.ofNullable(app.getPerfilAspirante()).orElse("N/A"));
+        data.put("CorreoDocumentacion", Optional.ofNullable(app.getCorreoDocumentacion()).orElse("N/A"));
         data.put("DiasHabilesRecepcion", String.valueOf(app.getDiasHabilesRecepcion()));
         data.put("PuntajeMinimoCorte", String.valueOf(app.getPuntajeMinimoCorte()));
         data.put("CupoMinCohorte", String.valueOf(app.getCupoMinCohorte()));
@@ -103,16 +137,15 @@ public class WordTemplateService {
         data.put("Indique el número de plazas de estudiante instructor que el programa va a ofrecer en esta cohorte", String.valueOf(app.getCupoEstudiantes()));
 
 
-
+        // 🔹 Leer plantilla
         File templateFile = new ClassPathResource("templates/plantilla.docx").getFile();
-
         try (FileInputStream fis = new FileInputStream(templateFile);
              XWPFDocument doc = new XWPFDocument(fis)) {
 
-            // Reemplazar en párrafos
+            // Reemplazo en párrafos
             replaceTextPreserveStyle(doc.getParagraphs(), data);
 
-            // Reemplazar en tablas
+            // Reemplazo en tablas
             for (XWPFTable table : doc.getTables()) {
                 for (XWPFTableRow row : table.getRows()) {
                     for (XWPFTableCell cell : row.getTableCells()) {
@@ -121,6 +154,7 @@ public class WordTemplateService {
                 }
             }
 
+            // Guardar documento temporal
             File outputFile = File.createTempFile("cohorte_", ".docx");
             try (FileOutputStream fos = new FileOutputStream(outputFile)) {
                 doc.write(fos);
@@ -130,16 +164,11 @@ public class WordTemplateService {
         }
     }
 
-    /**
-     * Reemplaza los placeholders {{Key}} en los párrafos manteniendo todos los estilos
-     * aunque estén divididos en varios XWPFRun
-     */
     private void replaceTextPreserveStyle(List<XWPFParagraph> paragraphs, Map<String, String> data) {
         for (XWPFParagraph paragraph : paragraphs) {
             List<XWPFRun> runs = paragraph.getRuns();
             if (runs == null || runs.isEmpty()) continue;
 
-            // Combinar todo el texto del párrafo
             StringBuilder fullText = new StringBuilder();
             for (XWPFRun run : runs) {
                 String t = run.getText(0);
@@ -156,7 +185,6 @@ public class WordTemplateService {
             }
 
             if (hasChange) {
-                // Reasignar el texto a los runs existentes, respetando estilos
                 int currentIndex = 0;
                 for (XWPFRun run : runs) {
                     String t = run.getText(0);
@@ -167,7 +195,6 @@ public class WordTemplateService {
                         currentIndex = endIndex;
                     }
                 }
-                // Si quedó texto extra (placeholder más largo que los runs originales)
                 if (currentIndex < replacedText.length()) {
                     XWPFRun lastRun = runs.get(runs.size() - 1);
                     lastRun.setText(lastRun.getText(0) + replacedText.substring(currentIndex), 0);
