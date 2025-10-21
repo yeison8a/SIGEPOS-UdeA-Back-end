@@ -25,8 +25,8 @@ public class CohortApplication {
     private Date fechaActaAprobacion;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "unidad_academica_id", nullable = false)
-    private AcademicUnit unidadAcademica;
+    @JoinColumn(name = "programa_id", nullable = false)
+    private Program programa;
 
     private String perfilAspirante;
     private String correoDocumentacion;
@@ -37,8 +37,4 @@ public class CohortApplication {
     private int cupoEstudiantes;
     private boolean plazasDisponibles;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "cohorte_id", nullable = false)
-    private EstudentInstructor instructor;
-    private String periodoCohorte;
 }

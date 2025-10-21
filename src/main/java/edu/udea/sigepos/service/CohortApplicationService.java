@@ -32,7 +32,7 @@ public class CohortApplicationService {
                 .map(existing -> {
                     existing.setNumeroActa(updated.getNumeroActa());
                     existing.setFechaActaAprobacion(updated.getFechaActaAprobacion());
-                    existing.setUnidadAcademica(updated.getUnidadAcademica());
+                    existing.setPrograma(updated.getPrograma());
                     existing.setPerfilAspirante(updated.getPerfilAspirante());
                     existing.setCorreoDocumentacion(updated.getCorreoDocumentacion());
                     existing.setDiasHabilesRecepcion(updated.getDiasHabilesRecepcion());
@@ -41,8 +41,6 @@ public class CohortApplicationService {
                     existing.setCupoMaxCohorte(updated.getCupoMaxCohorte());
                     existing.setCupoEstudiantes(updated.getCupoEstudiantes());
                     existing.setPlazasDisponibles(updated.isPlazasDisponibles());
-                    existing.setInstructor(updated.getInstructor());
-                    existing.setPeriodoCohorte(updated.getPeriodoCohorte());
                     return cohortApplicationRepository.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("Solicitud de cohorte no encontrada"));

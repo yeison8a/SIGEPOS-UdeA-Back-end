@@ -20,7 +20,7 @@ public class ProgramService {
 
     public Program findById(UUID id){
         return programRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Programa no encontrado"));
+                .orElseThrow(() -> new ProgramNotFoundException("Programa no encontrado"));
     }
 
     public Program save(Program program){
@@ -46,4 +46,9 @@ public class ProgramService {
         programRepository.deleteById(id);
     }
 
+    public static class ProgramNotFoundException extends RuntimeException {
+        public ProgramNotFoundException(String message) {
+            super(message);
+        }
+    }
 }

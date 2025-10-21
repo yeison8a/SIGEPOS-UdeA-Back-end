@@ -1,5 +1,6 @@
 package edu.udea.sigepos.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
