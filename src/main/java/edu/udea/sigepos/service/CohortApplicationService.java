@@ -1,6 +1,7 @@
 package edu.udea.sigepos.service;
 
 import edu.udea.sigepos.model.CohortApplication;
+import edu.udea.sigepos.model.EstadoSolicitud;
 import edu.udea.sigepos.repository.CohortApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,38 +16,162 @@ public class CohortApplicationService {
 
     private final CohortApplicationRepository cohortApplicationRepository;
 
-    public List<CohortApplication> findAll(){
+    public List<CohortApplication> findAll() {
+
         return cohortApplicationRepository.findAll();
+
     }
 
     public Optional<CohortApplication> findById(UUID id){
+
         return cohortApplicationRepository.findById(id);
+
     }
 
-    public CohortApplication save(CohortApplication cohortApplication){
-        return cohortApplicationRepository.save(cohortApplication);
+    public CohortApplication save(
+            CohortApplication cohortApplication
+    ){
+
+        actualizarEstado(cohortApplication);
+
+        return cohortApplicationRepository.save(
+                cohortApplication
+        );
+
     }
 
-    public CohortApplication update(UUID id, CohortApplication updated){
+    public CohortApplication update(
+            UUID id,
+            CohortApplication updated
+    ){
+
         return cohortApplicationRepository.findById(id)
+
                 .map(existing -> {
-                    existing.setNumeroActa(updated.getNumeroActa());
-                    existing.setFechaActaAprobacion(updated.getFechaActaAprobacion());
-                    existing.setPrograma(updated.getPrograma());
-                    existing.setPerfilAspirante(updated.getPerfilAspirante());
-                    existing.setCorreoDocumentacion(updated.getCorreoDocumentacion());
-                    existing.setDiasHabilesRecepcion(updated.getDiasHabilesRecepcion());
-                    existing.setPuntajeMinimoCorte(updated.getPuntajeMinimoCorte());
-                    existing.setCupoMinCohorte(updated.getCupoMinCohorte());
-                    existing.setCupoMaxCohorte(updated.getCupoMaxCohorte());
-                    existing.setCupoEstudiantes(updated.getCupoEstudiantes());
-                    existing.setPlazasDisponibles(updated.isPlazasDisponibles());
-                    return cohortApplicationRepository.save(existing);
+
+                    existing.setNumeroActa(
+                            updated.getNumeroActa()
+                    );
+
+                    existing.setFechaActaAprobacion(
+                            updated.getFechaActaAprobacion()
+                    );
+
+                    existing.setPrograma(
+                            updated.getPrograma()
+                    );
+
+                    existing.setPerfilAspirante(
+                            updated.getPerfilAspirante()
+                    );
+
+                    existing.setCorreoDocumentacion(
+                            updated.getCorreoDocumentacion()
+                    );
+
+                    existing.setDiasHabilesRecepcion(
+                            updated.getDiasHabilesRecepcion()
+                    );
+
+                    existing.setPuntajeMinimoCorte(
+                            updated.getPuntajeMinimoCorte()
+                    );
+
+                    existing.setCupoMinCohorte(
+                            updated.getCupoMinCohorte()
+                    );
+
+                    existing.setCupoMaxCohorte(
+                            updated.getCupoMaxCohorte()
+                    );
+
+                    existing.setCupoEstudiantes(
+                            updated.getCupoEstudiantes()
+                    );
+
+                    existing.setPlazasDisponibles(
+                            updated.isPlazasDisponibles()
+                    );
+
+                    existing.setRutaDocumento(
+                            updated.getRutaDocumento()
+                    );
+
+                    existing.setEnviada(
+                            updated.getEnviada()
+                    );
+
+                    actualizarEstado(existing);
+
+                    return cohortApplicationRepository
+                            .save(existing);
+
                 })
-                .orElseThrow(() -> new RuntimeException("Solicitud de cohorte no encontrada"));
+
+                .orElseThrow(() -> new RuntimeException(
+                        "Solicitud de cohorte no encontrada"
+                ));
     }
 
     public void delete(UUID id){
-        cohortApplicationRepository.deleteById(id);
+
+        cohortApplicationRepository
+                .deleteById(id);
+
+    }
+
+    private void actualizarEstado(
+            CohortApplication app
+    ){
+
+        boolean formularioCompleto =
+
+                app.getNumeroActa()!=null
+                        && !app.getNumeroActa().isBlank()
+
+                        &&
+
+                        app.getPerfilAspirante()!=null
+                        && !app.getPerfilAspirante().isBlank()
+
+                        &&
+
+                        app.getCorreoDocumentacion()!=null
+                        && !app.getCorreoDocumentacion().isBlank()
+
+                        &&
+
+                        app.getCupoMinCohorte()!=0
+
+                        &&
+
+                        app.getCupoMaxCohorte()!=0;
+
+        boolean anexosCompletos =
+
+                app.getRutaDocumento()!=null
+                        && !app.getRutaDocumento().isBlank();
+
+        if(!formularioCompleto){
+
+            app.setEstado(
+                    EstadoSolicitud.DEVUELTA
+            );
+
+        }
+
+        else if(formularioCompleto
+                &&
+                anexosCompletos
+                &&
+                Boolean.TRUE.equals(
+                        app.getEnviada()
+                )){
+
+            app.setEstado(
+                    EstadoSolicitud.PENDIENTE
+            );
+
+        }
     }
 }

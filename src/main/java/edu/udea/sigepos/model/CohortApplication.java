@@ -41,4 +41,14 @@ public class CohortApplication {
     @JoinColumn(name = "usuario_id", nullable = false)
     private User usuario;
 
+    @Enumerated(EnumType.STRING)
+    private EstadoSolicitud estado;
+
+    private Boolean enviada=false;
+
+    private String rutaDocumento;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "documentos_id", nullable = false)
+    private Document documento;
 }
