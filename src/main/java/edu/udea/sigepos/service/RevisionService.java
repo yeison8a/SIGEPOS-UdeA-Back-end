@@ -21,6 +21,7 @@ public class RevisionService {
     private final RevisionRepository revisionRepository;
     private final CohortApplicationRepository cohortApplicationRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public Revision create(CreateRevisionRequest request) {
 

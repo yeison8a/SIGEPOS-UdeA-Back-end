@@ -7,6 +7,7 @@ import edu.udea.sigepos.model.User;
 import edu.udea.sigepos.repository.CohortApplicationRepository;
 import edu.udea.sigepos.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.xwpf.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -16,19 +17,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class WordTemplateService {
 
+    private final GoogleDriveService googleDriveService;
     private final CohortApplicationRepository cohortRepo;
     private final UserRepository userRepository;
     private final EmailService emailService;
-
-    public WordTemplateService(CohortApplicationRepository cohortRepo,
-                               UserRepository userRepository,
-                               EmailService emailService) {
-        this.cohortRepo = cohortRepo;
-        this.userRepository = userRepository;
-        this.emailService = emailService;
-    }
 
     @Transactional
     public File generarDocumento(UUID cohortId) throws IOException {
@@ -132,7 +127,12 @@ public class WordTemplateService {
         data.put("Indique el número de plazas de estudiante instructor que el programa va a ofrecer en esta cohorte", String.valueOf(app.getCupoEstudiantes()));
 
 
-        File templateFile = new ClassPathResource("templates/plantilla.docx").getFile();
+        File templateFile =
+                googleDriveService.descargarPlantilla();
+
+        System.out.println(
+                "Plantilla descargada: "
+                        + templateFile.getAbsolutePath());
         try (FileInputStream fis = new FileInputStream(templateFile);
              XWPFDocument doc = new XWPFDocument(fis)) {
 
