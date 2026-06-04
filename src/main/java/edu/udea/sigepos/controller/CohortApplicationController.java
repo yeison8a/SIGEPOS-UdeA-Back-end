@@ -38,7 +38,6 @@ public class CohortApplicationController {
     @PostMapping
     public CohortApplication create(@RequestBody CohortApplication cohortApplication,
                                     @RequestParam UUID userId) throws IOException {
-
         User usuario = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 

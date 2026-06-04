@@ -23,6 +23,7 @@ public class EmailService {
     private String fromEmail;
 
     public void enviarCorreoConAdjunto(String toEmail, String subject, String body, File attachment) throws IOException {
+
         Email from = new Email(fromEmail);
         Email to = new Email(toEmail);
         Content content = new Content("text/plain", body);
