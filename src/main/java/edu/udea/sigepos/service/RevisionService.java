@@ -44,7 +44,45 @@ public class RevisionService {
                 .reviewDate(new Date())
                 .build();
 
-        return revisionRepository.save(revision);
+        Revision savedRevision =
+                revisionRepository.save(revision);
+
+        try {
+
+            User solicitante =
+                    application.getUsuario();
+
+            String asunto =
+                    "Observaciones de la revisión de su solicitud";
+
+            String mensaje =
+                    """
+                    Su solicitud ha sido revisada.
+    
+                    Estado: %s
+                    Prioridad: %s
+    
+                    Observaciones:
+                    %s
+    
+                    """.formatted(
+                            request.getStatus(),
+                            request.getPriority(),
+                            request.getObservations()
+                    );
+
+            emailService.enviarCorreoConAdjunto(
+                    solicitante.getCorreo(),
+                    asunto,
+                    mensaje,
+                    null
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return savedRevision;
     }
 
     public List<Revision> findAll() {
